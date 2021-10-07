@@ -1,5 +1,5 @@
 {
-    "name": "thomas/composer-test",
+    "name": "thomasleconte/composer-test",
     "description": "Yes",
     "type": "project",
     "autoload": {
