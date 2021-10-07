@@ -1,0 +1,17 @@
+{
+    "name": "thomas/composer-test",
+    "description": "Yes",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "Thomas\\ComposerTest\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "ThomasLeconte",
+            "email": "thomasleconte05@gmail.com"
+        }
+    ],
+    "require": {}
+}
