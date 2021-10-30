@@ -1,0 +1,9 @@
+#!/usr/bin/php
+<?php
+
+/**
+ * This script allows LaminasGen to being executed by your terminal.
+ */
+
+var_dump($argv);
+var_dump($argc);
