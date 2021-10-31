@@ -1,9 +1,29 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
+
+namespace LaminasGen;
+
+foreach ([__DIR__ . '/../../../autoload.php', __DIR__ . '/../vendor/autoload.php'] as $file) {
+  if (file_exists($file)) {
+    require $file;
+    break;
+  }
+}
+
+use Exception;
+use LaminasGen\Handler;
+use LaminasGen\Exceptions\EnoughtArgumentsException;
 
 /**
  * This script allows LaminasGen to being executed by your terminal.
  */
 
-var_dump($argv);
-var_dump($argc);
+if ($argc > 1) {
+  try{
+    Handler::handle(null, array_splice($argv, 1, sizeof($argv)));
+  }catch(Exception $e){
+    fwrite(STDERR, "\e[1;37;41m". $e->getMessage() ."\e[0m\n" . PHP_EOL);
+  }
+} else {
+  fwrite(STDERR, new EnoughtArgumentsException(("composer laminas-gen [module/controller/form] <ModuleName / ControllerName / FormName>")) . PHP_EOL);
+}
