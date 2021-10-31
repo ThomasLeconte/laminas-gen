@@ -31,7 +31,7 @@ class ControllerGenerator
   }
 
   public function writeInFile(string $content){
-    file_put_contents("toto.php", $content);
+    file_put_contents($this->getControllerName().".php", $content);
   }
 
   public function getControllerName(): string

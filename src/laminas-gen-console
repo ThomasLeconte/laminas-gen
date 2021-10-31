@@ -25,5 +25,6 @@ if ($argc > 1) {
     fwrite(STDERR, "\e[1;37;41m". $e->getMessage() ."\e[0m\n" . PHP_EOL);
   }
 } else {
-  fwrite(STDERR, new EnoughtArgumentsException(("composer laminas-gen [module/controller/form] <ModuleName / ControllerName / FormName>")) . PHP_EOL);
+  $e = new EnoughtArgumentsException(("composer laminas-gen [module/controller/form] <ModuleName / ControllerName / FormName>"));
+  fwrite(STDERR, "\e[1;37;41m" . $e->getMessage() . "\e[0m\n" . PHP_EOL);
 }
