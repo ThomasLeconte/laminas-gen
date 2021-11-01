@@ -39,7 +39,6 @@ class ControllerGenerator
   public function writeInFile(string $content)
   {
     if ($this->checkIfModuleControllerFolderExists() == false) {
-      var_dump($this->checkIfModuleControllerFolderExists());
       mkdir("./module/" . $this->getModuleName() . "/src/Controller/", 0777, true);
       echo "\n\e[1;37;45mController folder not found. Laminas-gen has created it into module/" . $this->getModuleName() . "/src folder.\e[0m\n";
     }

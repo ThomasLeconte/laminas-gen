@@ -7,6 +7,7 @@ use Composer\Script\Event;
 use Composer\Installer\PackageEvent;
 use LaminasGen\Generators\ControllerGenerator;
 use LaminasGen\Exceptions\EnoughtArgumentsException;
+use LaminasGen\Generators\ModuleGenerator;
 
 class Handler
 {
@@ -29,7 +30,10 @@ class Handler
         }
         switch ($finalArgs[0]) {
             case "controller":
-                new ControllerGenerator($args);
+                new ControllerGenerator($finalArgs);
+                break;
+            case "module":
+                new ModuleGenerator($finalArgs);
                 break;
             default:
                 throw new EnoughtArgumentsException("composer laminas-gen [module/controller/form] <ModuleName / ControllerName / FormName>");
