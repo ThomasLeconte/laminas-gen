@@ -6,26 +6,38 @@ use Exception;
 use LaminasGen\Generators\ControllerGenerator;
 use LaminasGen\Exceptions\EnoughtArgumentsException;
 use LaminasGen\Exceptions\ModuleAlreadyExistsException;
+use LaminasGen\Exceptions\UNknownArgumentException;
 
 class ModuleGenerator
 {
-  public static int $requiredArgs = 1;
+  public static int $requiredArgs = 2;
+  public static string $usage = "composer laminas-gen module <YourModuleName> [Optional: without-extra]";
   private array $args;
 
   public function __construct(array $args)
   {
-    $this->args = $args;
-    if ($this->checkIfModuleExists()) {
-      throw new ModuleAlreadyExistsException($this->getModuleName());
-    } else {
-      if (sizeof($args) > $this::$requiredArgs) {
-        echo 'Building "' . $args[1] . '" module ...' . "\n";
-        $this->generate();
-        // new ControllerGenerator([null, $this->getModuleName() . "Controller", $this->getModuleName()]);
+    if (sizeof($args) >= self::$requiredArgs) {
+      $this->args = $args;
+      if ($this->checkIfModuleExists()) {
+        throw new ModuleAlreadyExistsException($this->getModuleName());
       } else {
-        throw new EnoughtArgumentsException("composer laminas-gen controller <YourModuleName>");
+        if (sizeof($args) == 3) {
+          if ($args[2] === 'without-extra') {
+            echo 'Building "' . $args[1] . '" module ...' . "\n";
+            $this->generate();
+          } else {
+            throw new UnknownArgumentException(3, self::$usage);
+          }
+        } else {
+          echo 'Building "' . $args[1] . '" module ...' . "\n";
+          $this->generate();
+          new ControllerGenerator([null, $this->getModuleName() . "Controller", $this->getModuleName()]);
+        }
       }
+    } else {
+      throw new EnoughtArgumentsException(self::$usage);
     }
+
   }
 
   public function generate()
@@ -46,7 +58,9 @@ class ModuleGenerator
     $this->makeComposerConfig();
     $this->updateProjectModulesConfig();
     $this->makeModuleConfig();
+    $this->makeModule();
     $this->cleanProjectCache();
+    exec("composer dump-autoload -o");
   }
 
   public function makeComposerConfig(){
@@ -70,6 +84,13 @@ class ModuleGenerator
     $configTemplate = file_get_contents(__DIR__ . "/templates/module-config.txt");
     $configTemplate = str_replace("{{moduleName}}", $this->getModuleName(), $configTemplate);
     file_put_contents("./module/" . $this->getModuleName() . "/config/module.config.php", $configTemplate);
+  }
+
+  public function makeModule()
+  {
+    $configTemplate = file_get_contents(__DIR__ . "/templates/module.txt");
+    $configTemplate = str_replace("{{moduleName}}", $this->getModuleName(), $configTemplate);
+    file_put_contents("./module/" . $this->getModuleName() . "/src/Module.php", $configTemplate);
   }
 
   public function checkIfModuleExists(): bool
