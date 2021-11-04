@@ -35,11 +35,12 @@ class CacheManager
     if(!$this->cacheExists) $this->cacheExists = true;
   }
 
-  public function undoChanges()
+  public function undoChanges(bool $stepByStep = true)
   {
     if ($this->cacheExists) {
       $logFile = file_get_contents($this->logPath);
-      $logFileExploded = explode(PHP_EOL, $logFile);
+      $logFileExploded = array_reverse(explode(PHP_EOL, $logFile));
+      $commentsCount = 0;
       for ($i = 0; $i < count($logFileExploded); $i++) {
         $line = explode(" ", $logFileExploded[$i]);
         switch ($line[0]) {
@@ -52,25 +53,59 @@ class CacheManager
             $oldFileContent = file_get_contents($line[2]);
             if ($oldFileContent) {
               file_put_contents($line[1], $oldFileContent);
+              if (!unlink($line[2])) {
+                throw new Exception("Unable to delete file in " . $line[2]);
+              }
             }
             break;
           case Constants::LOG_CREATE_FOLDER:
             $this->deleteDirectory($line[1]);
             break;
+          case Constants::LOG_COMMENT:
+            if($stepByStep) $commentsCount++;
+            break;
+        }
+        if($stepByStep && $commentsCount == 2){
+          break;
         }
       }
     } else {
       throw new Exception("You don't have used LaminasGen for undo something...");
     }
-    $this->deleteLogs();
+    $stepByStep ? $this->deleteLogs($logFile) : $this->deleteLogs();
   }
 
-  public function deleteLogs()
+  public function deleteLogs(string $logFile = null)
   {
-    if (!unlink($this->logPath)) {
-      throw new Exception("Unable to delete library cache file in " . $this->logPath);
+    if($logFile != null){
+      $logFileExploded = array_reverse(explode(PHP_EOL, $logFile));
+      $toRemove = array();
+      $commentsCount = 0;
+      for($i=0;$i<count($logFileExploded);$i++){
+        $line = explode(" ", $logFileExploded[$i]);
+        array_push($toRemove, $logFileExploded[$i]);
+        if($line[0] == Constants::LOG_COMMENT){
+          $commentsCount++;
+          if ($commentsCount == 2){
+            break;
+          }
+        }
+      }
+
+      $logFileExploded = str_replace(join(PHP_EOL, array_reverse($toRemove)), '', join(PHP_EOL, array_reverse($logFileExploded)));
+      if($logFileExploded != ''){
+        file_put_contents($this->logPath, $logFileExploded);
+      }else{
+        if (!unlink($this->logPath)) {
+          throw new Exception("Unable to delete library cache file in " . $this->logPath);
+        }
+      }
+    }else{
+      if (!unlink($this->logPath)) {
+        throw new Exception("Unable to delete library cache file in " . $this->logPath);
+      }
+      $this->deleteDirectory(__DIR__ . "/cache/files/");
     }
-    $this->deleteDirectory(__DIR__."/cache/files/");
   }
 
   public function deleteDirectory($dir)

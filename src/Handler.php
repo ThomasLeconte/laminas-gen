@@ -40,6 +40,10 @@ class Handler
                 $manager = new CacheManager();
                 $manager->undoChanges();
                 break;
+            case "undo-all":
+                $manager = new CacheManager();
+                $manager->undoChanges(false);
+                break;
             default:
                 throw new EnoughtArgumentsException("composer laminas-gen [module/controller/form] <ModuleName / ControllerName / FormName>");
         }

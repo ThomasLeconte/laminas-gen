@@ -35,6 +35,10 @@ class ControllerGenerator extends Generator
 
   public function generate()
   {
+    if (!$this->calledByModuleGenerator) $this->cacheManager->addToLog(
+      Constants::LOG_COMMENT,
+      "CREATE CONTROLLER " . $this->getControllerName() . " IN MODULE " . $this->getModuleName()
+    );
     $result = file_get_contents(__DIR__ . "/templates/controller.txt");
     $result = str_replace("{{controllerName}}", $this->getControllerName(), $result);
     $result = str_replace("{{moduleName}}", $this->getModuleName(), $result);
@@ -42,6 +46,10 @@ class ControllerGenerator extends Generator
     $this->updateModuleConfig();
     $this->createAllViews();
     $this->cleanProjectCache();
+    if (!$this->calledByModuleGenerator) $this->cacheManager->addToLog(
+      Constants::LOG_COMMENT,
+      "END"
+    );
     echo "\n\e[0;30;42mSuccessfull generated " . $this->getControllerName() . " controller in " . $this->getModuleName() . "'s module !\e[0m\n";
   }
 
