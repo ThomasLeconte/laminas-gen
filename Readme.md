@@ -25,6 +25,8 @@ Then you will be able to use `composer laminas-gen <arguments>` instead of `vend
 ### Controller generation
 `composer laminas-gen controller <yourControllerName> <existingModuleName>` (This will generate all associated CRUD views for again, use your controller fast as possible. And you cant disable it ... For the moment 🥱)
 
+### Undo
+`composer laminas-gen undo` (This will undo all creations or modifications done by LaminasGen)
 ## Details
 When you will have installed this package, you will be able to edit templates in `src/Generators/templates/` folder. But keep in mind that you will have limited possibilites, due to number of variables understood by my script. So you can edit the script for make my script understanding **your** variables :)
 

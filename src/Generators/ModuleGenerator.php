@@ -3,12 +3,13 @@
 namespace LaminasGen\Generators;
 
 use Exception;
+use LaminasGen\Data\Constants;
 use LaminasGen\Generators\ControllerGenerator;
+use LaminasGen\Exceptions\UNknownArgumentException;
 use LaminasGen\Exceptions\EnoughtArgumentsException;
 use LaminasGen\Exceptions\ModuleAlreadyExistsException;
-use LaminasGen\Exceptions\UNknownArgumentException;
 
-class ModuleGenerator
+class ModuleGenerator extends Generator
 {
   public static int $requiredArgs = 2;
   public static string $usage = "composer laminas-gen module <YourModuleName> [Optional: without-extra]";
@@ -16,6 +17,7 @@ class ModuleGenerator
 
   public function __construct(array $args)
   {
+    parent::__construct();
     if (sizeof($args) >= self::$requiredArgs) {
       $this->args = $args;
       if ($this->checkIfModuleExists()) {
@@ -31,7 +33,7 @@ class ModuleGenerator
         } else {
           echo 'Building "' . $args[1] . '" module ...' . "\n";
           $this->generate();
-          new ControllerGenerator([null, $this->getModuleName() . "Controller", $this->getModuleName()]);
+          new ControllerGenerator([null, $this->getModuleName() . "Controller", $this->getModuleName()], true);
         }
       }
     } else {
@@ -61,22 +63,27 @@ class ModuleGenerator
     $this->makeModule();
     $this->cleanProjectCache();
     exec("composer dump-autoload -o");
+    $this->cacheManager->addToLog(Constants::LOG_CREATE_FOLDER, "./module/" . $this->getModuleName() . "/");
   }
 
   public function makeComposerConfig(){
+    $oldFileContent = file_get_contents("./composer.json");
     $composerJson = json_decode(file_get_contents('./composer.json'), true);
     $composerJson["autoload"]["psr-4"][$this->getModuleName() . "\\"] = "module/" . $this->getModuleName() . "/src" . "/";
     $composerResult = json_encode($composerJson, JSON_PRETTY_PRINT);
     $composerResult = str_replace("\\/", "/", $composerResult);
     file_put_contents("./composer.json", $composerResult);
+    $this->cacheManager->addToLog(Constants::LOG_UPDATE_FILE, "./composer.json", $oldFileContent);
   }
 
   public function updateProjectModulesConfig()
   {
     $modulesConfigFile = file_get_contents("./config/modules.config.php");
+    $oldFileContent = $modulesConfigFile;
     $modulesConfigFile = str_replace("return [", "return [
     '".$this->getModuleName()."',", $modulesConfigFile);
     file_put_contents("./config/modules.config.php", $modulesConfigFile);
+    $this->cacheManager->addToLog(Constants::LOG_UPDATE_FILE, "./config/modules.config.php", $oldFileContent);
   }
 
   public function makeModuleConfig()

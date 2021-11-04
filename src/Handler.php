@@ -4,10 +4,11 @@ namespace LaminasGen;
 
 use Exception;
 use Composer\Script\Event;
+use LaminasGen\Data\CacheManager;
 use Composer\Installer\PackageEvent;
+use LaminasGen\Generators\ModuleGenerator;
 use LaminasGen\Generators\ControllerGenerator;
 use LaminasGen\Exceptions\EnoughtArgumentsException;
-use LaminasGen\Generators\ModuleGenerator;
 
 class Handler
 {
@@ -34,6 +35,10 @@ class Handler
                 break;
             case "module":
                 new ModuleGenerator($finalArgs);
+                break;
+            case "undo":
+                $manager = new CacheManager();
+                $manager->undoChanges();
                 break;
             default:
                 throw new EnoughtArgumentsException("composer laminas-gen [module/controller/form] <ModuleName / ControllerName / FormName>");

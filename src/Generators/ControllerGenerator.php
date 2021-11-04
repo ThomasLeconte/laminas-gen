@@ -3,18 +3,24 @@
 namespace LaminasGen\Generators;
 
 use Exception;
+use LaminasGen\Data\Constants;
 use LaminasGen\Exceptions\ModuleNotFoundException;
 use LaminasGen\Exceptions\EnoughtArgumentsException;
 use LaminasGen\Exceptions\FileAlreadyExistsException;
 
-class ControllerGenerator
+class ControllerGenerator extends Generator
 {
   public static int $requiredArgs = 2;
   private array $args;
+  private bool $calledByModuleGenerator = false;
 
-  public function __construct(array $args)
+  public function __construct(array $args, bool $calledByModuleGenerator = null)
   {
+    parent::__construct();
     $this->args = $args;
+    if($calledByModuleGenerator){
+      $this->calledByModuleGenerator = true;
+    }
     if ($this->checkIfModuleExists()) {
       if (sizeof($args) > $this::$requiredArgs) {
         echo 'Building "' . $args[1] . '" controller in "' . $args[2] . '" module ...' . "\n";
@@ -50,6 +56,8 @@ class ControllerGenerator
     } else {
       file_put_contents("./module/" . $this->getModuleName() . "/src/Controller/" . $this->getControllerName() . ".php", $content);
     }
+    if(!$this->calledByModuleGenerator) $this->cacheManager->addToLog(Constants::LOG_CREATE_FILE,
+      "./module/" . $this->getModuleName() . "/src/Controller/" . $this->getControllerName() . ".php");
   }
 
   public function updateModuleConfig()
@@ -57,6 +65,7 @@ class ControllerGenerator
     $finalControllerName = strtolower(strpos($this->getControllerName(), "Controller") ?
       str_replace("Controller", "", $this->getControllerName()) : $this->getControllerName());
     if(file_exists("./module/" . $this->getModuleName() . "/config/module.config.php")){
+      $oldFileContent = file_get_contents("./module/" . $this->getModuleName() . "/config/module.config.php");
       $moduleConfig = require("./module/" . $this->getModuleName() . "/config/module.config.php");
       if(!array_key_exists("controllers", $moduleConfig)){
         $moduleConfig["controllers"] = array();
@@ -87,6 +96,8 @@ class ControllerGenerator
       $fileTransformed = str_replace(substr($moduleFile, strpos($moduleFile, "return"), strlen($moduleFile)), "", $moduleFile);
       $fileTransformed = $fileTransformed . $this->returnFormatedArray($moduleConfig);
       file_put_contents("./module/" . $this->getModuleName() . "/config/module.config.php", $fileTransformed);
+      if(!$this->calledByModuleGenerator) $this->cacheManager->addToLog(Constants::LOG_UPDATE_FILE,
+        "./module/" . $this->getModuleName() . "/config/module.config.php", $oldFileContent);
     }else{
       $configTemplate = file_get_contents(__DIR__ . "/templates/module-config-with-controller.txt");
       $configTemplate = str_replace("{{finalControllerName}}", $finalControllerName, $configTemplate);
@@ -94,6 +105,8 @@ class ControllerGenerator
       $configTemplate = str_replace("{{moduleName}}", $this->getModuleName(), $configTemplate);
       file_put_contents("./module/" . $this->getModuleName() . "/config/module.config.php", $configTemplate);
       echo "\n\e[1;37;45m". $this->getModuleName() . "/config/module.config.php does not exists. Laminas-gen has created it for next steps of generation.\e[0m\n";
+      if(!$this->calledByModuleGenerator) $this->cacheManager->addToLog(Constants::LOG_CREATE_FILE,
+        "./module/" . $this->getModuleName() . "/config/module.config.php", $configTemplate);
     }
   }
 
@@ -115,6 +128,8 @@ class ControllerGenerator
       $viewTemplate = str_replace("{{actionName}}", $actions[$i], $viewTemplate);
       file_put_contents("./module/". $this->getModuleName(). "/view" . "/" . $moduleName . "/" . $finalControllerName . "/" . $actions[$i] . ".phtml", $viewTemplate);
     }
+    if(!$this->calledByModuleGenerator) $this->cacheManager->addToLog(Constants::LOG_CREATE_FOLDER,
+      "./module/" . $this->getModuleName() . "/view" . "/" . $moduleName . "/" . $finalControllerName . "/");
   }
 
   public function returnFormatedArray($array): string
@@ -147,7 +162,6 @@ class ControllerGenerator
                 } else {
                   $explodedItem = join("\\", array_slice($explodedItem, count($explodedItem) - 2, 3));
                 }
-                var_dump($explodedItem);
               }
               $lineExploded[$j] = $explodedItem;
             }
