@@ -2,7 +2,7 @@
     "name": "thomasleconte/laminas-gen",
     "description": "Package for generate modules / controllers / forms with Laminas Framework.",
     "type": "library",
-    "version": "1.0.0",
+    "version": "0.0.1",
     "authors": [
         {
             "name": "ThomasLeconte",
