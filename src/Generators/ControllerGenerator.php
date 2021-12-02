@@ -103,6 +103,7 @@ class ControllerGenerator extends Generator
       $moduleFile = file_get_contents("./module/" . $this->getModuleName() . "/config/module.config.php");
       $fileTransformed = str_replace(substr($moduleFile, strpos($moduleFile, "return"), strlen($moduleFile)), "", $moduleFile);
       $fileTransformed = $fileTransformed . $this->returnFormatedArray($moduleConfig);
+      $fileTransformed = str_replace("'#__DIR__#", ""."__DIR__.'", $fileTransformed);
       file_put_contents("./module/" . $this->getModuleName() . "/config/module.config.php", $fileTransformed);
       if(!$this->calledByModuleGenerator) $this->cacheManager->addToLog(Constants::LOG_UPDATE_FILE,
         "./module/" . $this->getModuleName() . "/config/module.config.php", $oldFileContent);
@@ -152,6 +153,10 @@ class ControllerGenerator extends Generator
     $arrayExploded = explode("\n", preg_replace(array_keys($patterns), array_values($patterns), $array));
     for($i=0;$i<count($arrayExploded);$i++){
       if(strpos($arrayExploded[$i], "\\")){
+        $workingDirectory = str_replace("\\", "\\\\", getcwd()."\\module\\".$this->getModuleName()."\\config");
+        if(strpos($arrayExploded[$i], $workingDirectory)){
+          $arrayExploded[$i] = str_replace($workingDirectory, '#__DIR__#', $arrayExploded[$i]);
+        }
         if(strpos($arrayExploded[$i], "=>")){
           $lineExploded = explode("=>", $arrayExploded[$i]);
           for($j=0;$j<count($lineExploded);$j++){
