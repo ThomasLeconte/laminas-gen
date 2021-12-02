@@ -32,5 +32,18 @@ Then you will be able to use `composer laminas-gen <arguments>` instead of `vend
 When you will have installed this package, you will be able to edit templates in `src/Generators/templates/` folder. But keep in mind that you will have limited possibilites, due to number of variables understood by my script. So you can edit the script for make my script understanding **your** variables :)
 
 ##  Debug it
-1 - Run autoload command before work on project : `composer dump-autoload -o`  
+1 - Run autoload command before work on project : `composer dump-autoload -o`
 2 - Good luck dude.
+
+### Reminder
+If you want to use package during debug, add these lines on your test project :
+```json
+    "repositories": [
+        {
+            "type": "path",
+            "url": "absolute/or/relative/path/to/laminas-gen/folder"
+        }
+    ]
+```
+Then, just install it with : `composer install thomasleconte/laminas-gen @dev`.
+Take care about `@dev`, composer uses this to pickup the source code and symlink it to your new package.
