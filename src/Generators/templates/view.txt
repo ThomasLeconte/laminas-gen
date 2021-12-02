@@ -1,0 +1,15 @@
+<?php
+
+/**
+ *
+ * module/{{moduleName}}/view/{{finalControllerName}}/{{finalControllerName}}/{{actionName}}.phtml
+ *
+ * This file has been generated with LaminasGen
+ * https://github.com/ThomasLeconte/laminas-gen
+ *
+ */
+
+$title = '{{finalControllerName}} - {{actionName}}';
+$this->headTitle($title);
+?>
+<h1><?= $this->escapeHtml($title) ?></h1>

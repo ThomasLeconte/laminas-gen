@@ -1,17 +1,38 @@
 {
-    "name": "thomasleconte/composer-test",
-    "description": "Yes",
-    "type": "project",
-    "autoload": {
-        "psr-4": {
-            "Thomas\\ComposerTest\\": "src/"
-        }
-    },
+    "name": "thomasleconte/laminas-gen",
+    "description": "Package for generate modules / controllers / forms with Laminas Framework.",
+    "type": "library",
+    "version": "0.0.1",
     "authors": [
         {
             "name": "ThomasLeconte",
             "email": "thomasleconte05@gmail.com"
         }
     ],
-    "require": {}
+    "bin": [
+        "src/laminas-gen-console"
+    ],
+    "autoload": {
+        "psr-4": {
+            "LaminasGen\\": "src/"
+        }
+    },
+    "scripts": {
+        "post-update-cmd": "MyCompany\\MyProject\\MyFile::postUpdate",
+        "post-package-install": [
+            "MyCompany\\MyProject\\MyFile::postPackageInstall"
+        ],
+        "post-install-cmd": [
+            "MyCompany\\MyProject\\MyFile::warmCache"
+        ],
+        "post-autoload-dump": [
+            "LaminasGen\\Handler::postAutoloadDump"
+        ],
+        "post-create-project-cmd": [
+            "php -r \"copy('config/local-example.php', 'config/local.php');\""
+        ],
+        "laminas-gen": [
+            "LaminasGen\\Handler::handle"
+        ]
+    }
 }
