@@ -44,6 +44,10 @@ class ModuleGenerator extends Generator
 
   public function generate()
   {
+    $this->cacheManager->addToLog(
+      Constants::LOG_COMMENT,
+      "CREATE MODULE " . $this->getModuleName()
+    );
     mkdir('./module/'.$this->getModuleName());
     mkdir('./module/' . $this->getModuleName() . "/config", 0777, true);
     mkdir('./module/' . $this->getModuleName() . "/src", 0777, true);
@@ -52,6 +56,10 @@ class ModuleGenerator extends Generator
     mkdir('./module/' . $this->getModuleName() . "/src/Form", 0777, true);
     mkdir('./module/' . $this->getModuleName() . "/src/Model", 0777, true);
     $this->makeConfig();
+    $this->cacheManager->addToLog(
+      Constants::LOG_COMMENT,
+      "END"
+    );
     echo "\n\e[0;30;42mSuccessfull generated " . $this->getModuleName() . " module with it configuration !\e[0m\n";
   }
 
