@@ -3,6 +3,7 @@
 namespace LaminasGen\Generators;
 
 use Exception;
+use Composer\Script\Event;
 use LaminasGen\Data\Constants;
 use LaminasGen\Exceptions\ModuleNotFoundException;
 use LaminasGen\Exceptions\EnoughtArgumentsException;
@@ -10,26 +11,26 @@ use LaminasGen\Exceptions\FileAlreadyExistsException;
 
 class ControllerGenerator extends Generator
 {
-  public static int $requiredArgs = 2;
+  public static int $requiredArgs = 3;
   private array $args;
   private bool $calledByModuleGenerator = false;
 
-  public function __construct(array $args, bool $calledByModuleGenerator = null)
+  public function __construct(Event $event, bool $calledByModuleGenerator = null)
   {
-    parent::__construct();
-    $this->args = $args;
-    if($calledByModuleGenerator){
+    parent::__construct($event);
+    $this->args = $event->getArguments();
+    if ($calledByModuleGenerator) {
       $this->calledByModuleGenerator = true;
     }
-    if ($this->checkIfModuleExists()) {
-      if (sizeof($args) > $this::$requiredArgs) {
-        echo 'Building "' . $args[1] . '" controller in "' . $args[2] . '" module ...' . "\n";
+    if (sizeof($this->args) >= $this::$requiredArgs) {
+      if ($this->checkIfModuleExists()) {
+        echo 'Building "' . $this->args[1] . '" controller in "' . $this->args[2] . '" module ...' . "\n";
         $this->generate();
       } else {
-        throw new EnoughtArgumentsException("composer laminas-gen controller <YourControllerName> <YourModuleName>");
+        throw new ModuleNotFoundException($this->getModuleName());
       }
     } else {
-      throw new ModuleNotFoundException($this->getModuleName());
+      throw new EnoughtArgumentsException("composer laminas-gen controller <YourControllerName> <YourModuleName>");
     }
   }
 
@@ -64,30 +65,32 @@ class ControllerGenerator extends Generator
     } else {
       file_put_contents("./module/" . $this->getModuleName() . "/src/Controller/" . $this->getControllerName() . ".php", $content);
     }
-    if(!$this->calledByModuleGenerator) $this->cacheManager->addToLog(Constants::LOG_CREATE_FILE,
-      "./module/" . $this->getModuleName() . "/src/Controller/" . $this->getControllerName() . ".php");
+    if (!$this->calledByModuleGenerator) $this->cacheManager->addToLog(
+      Constants::LOG_CREATE_FILE,
+      "./module/" . $this->getModuleName() . "/src/Controller/" . $this->getControllerName() . ".php"
+    );
   }
 
   public function updateModuleConfig()
   {
     $finalControllerName = strtolower(strpos($this->getControllerName(), "Controller") ?
       str_replace("Controller", "", $this->getControllerName()) : $this->getControllerName());
-    if(file_exists("./module/" . $this->getModuleName() . "/config/module.config.php")){
+    if (file_exists("./module/" . $this->getModuleName() . "/config/module.config.php")) {
       $oldFileContent = file_get_contents("./module/" . $this->getModuleName() . "/config/module.config.php");
       $moduleConfig = require("./module/" . $this->getModuleName() . "/config/module.config.php");
-      if(!array_key_exists("controllers", $moduleConfig)){
+      if (!array_key_exists("controllers", $moduleConfig)) {
         $moduleConfig["controllers"] = array();
         $moduleConfig["controllers"]["factories"] = array();
-      }else{
+      } else {
         if (!array_key_exists("factories", $moduleConfig["controllers"])) $moduleConfig["controllers"]["factories"] = array();
       }
-      $moduleConfig["controllers"]["factories"] += ["Controller\\". $this->getControllerName() => "Factory\\InvokableFactory"];
+      $moduleConfig["controllers"]["factories"] += ["Controller\\" . $this->getControllerName() => "Factory\\InvokableFactory"];
       if (!$moduleConfig["router"]["routes"]) $moduleConfig["router"]["routes"] = array();
       $routeToAdd = [
         $finalControllerName => [
           "type" => "Laminas\\Router\\Http\\Segment",
           "options" => [
-            "route" => "/".$finalControllerName."[:action[/:id]]",
+            "route" => "/" . $finalControllerName . "[:action[/:id]]",
             'constraints' => [
               'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
               'id'     => '[0-9]+',
@@ -103,19 +106,25 @@ class ControllerGenerator extends Generator
       $moduleFile = file_get_contents("./module/" . $this->getModuleName() . "/config/module.config.php");
       $fileTransformed = str_replace(substr($moduleFile, strpos($moduleFile, "return"), strlen($moduleFile)), "", $moduleFile);
       $fileTransformed = $fileTransformed . $this->returnFormatedArray($moduleConfig);
-      $fileTransformed = str_replace("'#__DIR__#", ""."__DIR__.'", $fileTransformed);
+      $fileTransformed = str_replace("'#__DIR__#", "" . "__DIR__.'", $fileTransformed);
       file_put_contents("./module/" . $this->getModuleName() . "/config/module.config.php", $fileTransformed);
-      if(!$this->calledByModuleGenerator) $this->cacheManager->addToLog(Constants::LOG_UPDATE_FILE,
-        "./module/" . $this->getModuleName() . "/config/module.config.php", $oldFileContent);
-    }else{
+      if (!$this->calledByModuleGenerator) $this->cacheManager->addToLog(
+        Constants::LOG_UPDATE_FILE,
+        "./module/" . $this->getModuleName() . "/config/module.config.php",
+        $oldFileContent
+      );
+    } else {
       $configTemplate = file_get_contents(__DIR__ . "/templates/module-config-with-controller.txt");
       $configTemplate = str_replace("{{finalControllerName}}", $finalControllerName, $configTemplate);
       $configTemplate = str_replace("{{controllerName}}", $this->getControllerName(), $configTemplate);
       $configTemplate = str_replace("{{moduleName}}", $this->getModuleName(), $configTemplate);
       file_put_contents("./module/" . $this->getModuleName() . "/config/module.config.php", $configTemplate);
-      echo "\n\e[1;37;45m". $this->getModuleName() . "/config/module.config.php does not exists. Laminas-gen has created it for next steps of generation.\e[0m\n";
-      if(!$this->calledByModuleGenerator) $this->cacheManager->addToLog(Constants::LOG_CREATE_FILE,
-        "./module/" . $this->getModuleName() . "/config/module.config.php", $configTemplate);
+      echo "\n\e[1;37;45m" . $this->getModuleName() . "/config/module.config.php does not exists. Laminas-gen has created it for next steps of generation.\e[0m\n";
+      if (!$this->calledByModuleGenerator) $this->cacheManager->addToLog(
+        Constants::LOG_CREATE_FILE,
+        "./module/" . $this->getModuleName() . "/config/module.config.php",
+        $configTemplate
+      );
     }
   }
 
@@ -124,9 +133,9 @@ class ControllerGenerator extends Generator
     $actions = ["index", "add", "edit", "delete"];
     $moduleName = strtolower($this->getModuleName());
     $finalControllerName = strtolower(strpos($this->getControllerName(), "Controller") ?
-    str_replace("Controller", "", $this->getControllerName()) : $this->getControllerName());
-    if(file_exists("./module/". $this->getModuleName()."/view"."/")){
-      mkdir("./module/" . $this->getModuleName() . "/view" . "/" .$moduleName . "/" . $finalControllerName . "/", 0777, true);
+      str_replace("Controller", "", $this->getControllerName()) : $this->getControllerName());
+    if (file_exists("./module/" . $this->getModuleName() . "/view" . "/")) {
+      mkdir("./module/" . $this->getModuleName() . "/view" . "/" . $moduleName . "/" . $finalControllerName . "/", 0777, true);
       echo "\n\e[1;37;45m/view" . "/" . $moduleName . "/" . $finalControllerName . "/" . " folder not found. Laminas-gen has 
       created it with needed subfolders into /module/" . $this->getModuleName() . " folder.\e[0m\n";
     }
@@ -135,10 +144,12 @@ class ControllerGenerator extends Generator
       $viewTemplate = str_replace("{{moduleName}}", $moduleName, $viewTemplate);
       $viewTemplate = str_replace("{{finalControllerName}}", $finalControllerName, $viewTemplate);
       $viewTemplate = str_replace("{{actionName}}", $actions[$i], $viewTemplate);
-      file_put_contents("./module/". $this->getModuleName(). "/view" . "/" . $moduleName . "/" . $finalControllerName . "/" . $actions[$i] . ".phtml", $viewTemplate);
+      file_put_contents("./module/" . $this->getModuleName() . "/view" . "/" . $moduleName . "/" . $finalControllerName . "/" . $actions[$i] . ".phtml", $viewTemplate);
     }
-    if(!$this->calledByModuleGenerator) $this->cacheManager->addToLog(Constants::LOG_CREATE_FOLDER,
-      "./module/" . $this->getModuleName() . "/view" . "/" . $moduleName . "/" . $finalControllerName . "/");
+    if (!$this->calledByModuleGenerator) $this->cacheManager->addToLog(
+      Constants::LOG_CREATE_FOLDER,
+      "./module/" . $this->getModuleName() . "/view" . "/" . $moduleName . "/" . $finalControllerName . "/"
+    );
   }
 
   public function returnFormatedArray($array): string
@@ -151,16 +162,16 @@ class ControllerGenerator extends Generator
       "/([ ]*)(\'[^\']+\') => ([\[\'])/" => '$1$2 => $3'
     ];
     $arrayExploded = explode("\n", preg_replace(array_keys($patterns), array_values($patterns), $array));
-    for($i=0;$i<count($arrayExploded);$i++){
-      if(strpos($arrayExploded[$i], "\\")){
-        $workingDirectory = str_replace("\\", "\\\\", getcwd()."\\module\\".$this->getModuleName()."\\config");
-        if(strpos($arrayExploded[$i], $workingDirectory)){
+    for ($i = 0; $i < count($arrayExploded); $i++) {
+      if (strpos($arrayExploded[$i], "\\")) {
+        $workingDirectory = str_replace("\\", "\\\\", getcwd() . "\\module\\" . $this->getModuleName() . "\\config");
+        if (strpos($arrayExploded[$i], $workingDirectory)) {
           $arrayExploded[$i] = str_replace($workingDirectory, '#__DIR__#', $arrayExploded[$i]);
         }
-        if(strpos($arrayExploded[$i], "=>")){
+        if (strpos($arrayExploded[$i], "=>")) {
           $lineExploded = explode("=>", $arrayExploded[$i]);
-          for($j=0;$j<count($lineExploded);$j++){
-            if(strpos($lineExploded[$j], "\\\\")){
+          for ($j = 0; $j < count($lineExploded); $j++) {
+            if (strpos($lineExploded[$j], "\\\\")) {
               $lineExploded[$j] = str_replace("\\\\", "\\", $lineExploded[$j]);
               $lineExploded[$j] = str_replace("'", "", $lineExploded[$j]);
               if (strpos($lineExploded[$j], ",")) {
@@ -169,7 +180,7 @@ class ControllerGenerator extends Generator
                 $lineExploded[$j] = $lineExploded[$j] . "::class";
               }
               $explodedItem = explode("\\", $lineExploded[$j]);
-              if(count($explodedItem) > 1){
+              if (count($explodedItem) > 1) {
                 if (strpos($lineExploded[$j], "InvokableFactory::class") || strpos($lineExploded[$j], "Segment::class") || strpos($lineExploded[$j], "Literal::class")) {
                   $explodedItem = $explodedItem[count($explodedItem) - 1];
                 } else {
@@ -184,26 +195,7 @@ class ControllerGenerator extends Generator
       }
     }
 
-    return "return ".join(PHP_EOL, $arrayExploded).";";
-  }
-
-  public function cleanProjectCache()
-  {
-    $phpFiles = array_map(function ($file) {
-      $length = strlen(".php");
-      if (substr_compare($file, ".php", -$length) === 0) {
-        return $file;
-      }
-    }, scandir("./data/cache"));
-    if (sizeof($phpFiles) > 0) {
-      for ($i = 0; $i < sizeof($phpFiles); $i++) {
-        if ($phpFiles[$i] !== NULL) {
-          if (!unlink("./data/cache/" . $phpFiles[$i])) {
-            throw new Exception("Unable to delete cache file ./data/cache/" . $phpFiles[$i]);
-          }
-        }
-      }
-    }
+    return "return " . join(PHP_EOL, $arrayExploded) . ";";
   }
 
   public function checkIfModuleExists(): bool

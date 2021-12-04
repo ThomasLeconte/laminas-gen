@@ -6,6 +6,8 @@ use Exception;
 use Composer\Script\Event;
 use LaminasGen\Data\CacheManager;
 use Composer\Installer\PackageEvent;
+use LaminasGen\Data\Constants;
+use LaminasGen\Generators\EntityGenerator;
 use LaminasGen\Generators\ModuleGenerator;
 use LaminasGen\Generators\ControllerGenerator;
 use LaminasGen\Exceptions\EnoughtArgumentsException;
@@ -17,43 +19,39 @@ class Handler
         echo "Build Handler.php";
     }
 
-    public static function handle(Event $event = null, $args = null)
+    public static function handle(Event $event)
     {
-        $finalArgs = null;
-        if($event == null){
-            if($args == null){
-                throw new Exception('Please give arguments to command ! Use Laminas-gen like that : composer laminas-gen [module/controller/form] <ModuleName / ControllerName / FormName>');
-            }else{
-                $finalArgs = $args;
-            }
-        }else{
+        try{
             $finalArgs = $event->getArguments();
-        }
-        switch ($finalArgs[0]) {
-            case "controller":
-                new ControllerGenerator($finalArgs);
-                break;
-            case "module":
-                new ModuleGenerator($finalArgs);
-                break;
-            case "undo":
-                $manager = new CacheManager();
-                $manager->undoChanges();
-                break;
-            case "undo-all":
-                $manager = new CacheManager();
-                $manager->undoChanges(false);
-                break;
-            default:
-                throw new EnoughtArgumentsException("composer laminas-gen [module/controller/form] <ModuleName / ControllerName / FormName>");
+            if (sizeof($finalArgs) > 0) {
+                switch ($finalArgs[0]) {
+                    case "controller":
+                        new ControllerGenerator($event);
+                        break;
+                    case "module":
+                        new ModuleGenerator($event);
+                        break;
+                    case "entity":
+                        new EntityGenerator($event);
+                        break;
+                    case "undo":
+                        $manager = new CacheManager();
+                        $manager->undoChanges();
+                        break;
+                    case "undo-all":
+                        $manager = new CacheManager();
+                        $manager->undoChanges(false);
+                        break;
+                    default:
+                        throw new EnoughtArgumentsException("composer laminas-gen [module/controller/entity] <ModuleName / ControllerName / EntityName>");
+                }
+            } else {
+                throw new EnoughtArgumentsException(("composer laminas-gen [module/controller/entity] <ModuleName / ControllerName / EntityName>"));
+            }
+        }catch(Exception $e){
+            fwrite(STDERR, "\n\e[1;37;41m" . $e->getMessage() . "\e[0m\n" . PHP_EOL);
         }
     }
-
-    // public static function postUpdate(Event $event)
-    // {
-    //     $composer = $event->getComposer();
-    //     // do stuff
-    // }
 
     // public static function postAutoloadDump(Event $event)
     // {
@@ -61,11 +59,17 @@ class Handler
     //     require $vendorDir . '/autoload.php';
     // }
 
-    // public static function postPackageInstall(PackageEvent $event)
-    // {
-    //     $installedPackage = $event->getOperation()->getPackage();
-    //     // do stuff
-    // }
+    public static function postPackageInstall(Event $event)
+    {
+        $composerJson = json_decode(file_get_contents('./composer.json'), true);
+        if (!array_key_exists("scripts", $composerJson)) {
+            $composerJson["scripts"] = array();
+        }
+        $composerJson["scripts"][Constants::COMMAND_PREFIX] = Constants::COMMAND;
+        $composerResult = json_encode($composerJson, JSON_PRETTY_PRINT);
+        $composerResult = str_replace("\\/", "/", $composerResult);
+        file_put_contents("./composer.json", $composerResult);
+    }
 
     // public static function warmCache(Event $event)
     // {

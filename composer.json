@@ -2,10 +2,11 @@
     "name": "thomasleconte/laminas-gen",
     "description": "Package for generate modules / controllers / forms with Laminas Framework.",
     "type": "library",
-    "version": "0.0.2",
+    "version": "0.0.3",
+    "license": "MIT",
     "authors": [
         {
-            "name": "ThomasLeconte",
+            "name": "Thomas Leconte",
             "email": "thomasleconte05@gmail.com"
         }
     ],
@@ -18,21 +19,20 @@
         }
     },
     "scripts": {
-        "post-update-cmd": "MyCompany\\MyProject\\MyFile::postUpdate",
+        "post-update-cmd": [
+            "LaminasGen\\Handler::install"
+        ],
         "post-package-install": [
             "MyCompany\\MyProject\\MyFile::postPackageInstall"
         ],
         "post-install-cmd": [
-            "MyCompany\\MyProject\\MyFile::warmCache"
+            "LaminasGen\\Handler::install"
         ],
         "post-autoload-dump": [
             "LaminasGen\\Handler::postAutoloadDump"
         ],
         "post-create-project-cmd": [
             "php -r \"copy('config/local-example.php', 'config/local.php');\""
-        ],
-        "laminas-gen": [
-            "LaminasGen\\Handler::handle"
         ]
     }
 }

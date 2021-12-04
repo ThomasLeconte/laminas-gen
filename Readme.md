@@ -6,7 +6,7 @@ Do you know Symfony's generating commands ? It's the same, for **Laminas Framewo
 Just use `composer install thomasleconte/laminas-gen` !
 
 ## Config it
-When library is installed, you can use `vendor/bin/laminas-gen-console <arguments>` to generate items. But if you want, you can create your own command for call this script in `composer.json` :
+You need to provide this script in your `composer.json` file for make this lib able to be used.
 
 ```json
     "scripts": {
@@ -16,7 +16,6 @@ When library is installed, you can use `vendor/bin/laminas-gen-console <argument
     }
 
 ```  
-Then you will be able to use `composer laminas-gen <arguments>` instead of `vendor/bin/laminas-gen-console <arguments>`.
 
 ## Use it
 ### Module generation

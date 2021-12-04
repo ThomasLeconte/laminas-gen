@@ -17,14 +17,13 @@ use LaminasGen\Exceptions\EnoughtArgumentsException;
 /**
  * This script allows LaminasGen to being executed by your terminal.
  */
-
 if ($argc > 1) {
   try{
     Handler::handle(null, array_splice($argv, 1, sizeof($argv)));
   }catch(Exception $e){
-    fwrite(STDERR, "\n\e[1;37;41m". $e->getMessage() ."\e[0m\n" . PHP_EOL);
+    
   }
 } else {
-  $e = new EnoughtArgumentsException(("composer laminas-gen [module/controller/form] <ModuleName / ControllerName / FormName>"));
+  
   fwrite(STDERR, "\n\e[1;37;41m" . $e->getMessage() . "\e[0m\n" . PHP_EOL);
 }
