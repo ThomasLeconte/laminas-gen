@@ -56,12 +56,17 @@ class EntityGenerator extends Generator
     $template = str_replace("{{moduleName}}", $this->getModuleName(), $template);
     $propertiesResult = "";
     $exchangeArrayProperties = "";
+    $gettersSetters = "";
     foreach ($properties as $property) {
-      $propertiesResult .= "   " . " private $" . $property . ";\n";
-      $exchangeArrayProperties .= "       " . '$this->' . $property . ' = !empty($data["' . $property . '"]) ? $data["' . $property . '"] : null;' . "\n";
+      $propertiesResult .= "\tprivate $" . $property . ";\n";
+      $exchangeArrayProperties .= "\t\t" . '$this->' . $property . ' = !empty($data["' . $property . '"]) ? $data["' . $property . '"] : null;' . "\n";
+      $propertyNameTransformed = ucfirst(strtolower($property));
+      $gettersSetters .= "\t"."public function get".$propertyNameTransformed."(){\n\t\treturn \$this->".$property.";\n\t}\n\n";
+      $gettersSetters .= "\t"."public function set".$propertyNameTransformed."(\$value){\n\t\t\$this->".$property." = \$value;\n\t}\n\n";
     }
     $template = str_replace("{{properties}}", $propertiesResult, $template);
     $template = str_replace("{{exchangeArrayProperties}}", $exchangeArrayProperties, $template);
+    $template = str_replace("{{gettersSetters}}", $gettersSetters, $template);
     file_put_contents("./module/" . $this->getModuleName() . "/src/Model" . "/" . $this->getEntityName() . ".php", $template);
     $this->cacheManager->addToLog(
       Constants::LOG_CREATE_FILE,

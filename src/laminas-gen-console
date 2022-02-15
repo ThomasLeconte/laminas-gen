@@ -19,11 +19,10 @@ use LaminasGen\Exceptions\EnoughtArgumentsException;
  */
 if ($argc > 1) {
   try{
-    Handler::handle(null, array_splice($argv, 1, sizeof($argv)));
+      Handler::handle(null, array_splice($argv, 1, sizeof($argv)));
   }catch(Exception $e){
-    
+      fwrite(STDERR, "\n\e[1;37;41m" . $e->getMessage() . "\e[0m\n" . PHP_EOL);
   }
 } else {
-  
   fwrite(STDERR, "\n\e[1;37;41m" . $e->getMessage() . "\e[0m\n" . PHP_EOL);
 }

@@ -2,7 +2,6 @@
 
 namespace LaminasGen\Generators;
 
-use Exception;
 use Composer\Script\Event;
 use LaminasGen\Data\Constants;
 use LaminasGen\Exceptions\ModuleNotFoundException;

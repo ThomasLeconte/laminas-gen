@@ -3,7 +3,7 @@
 Do you know Symfony's generating commands ? It's the same, for **Laminas Framework** :)
 
 ## install it
-Just use `composer install thomasleconte/laminas-gen` !
+Just use `composer require thomasleconte/laminas-gen` !
 
 ## Config it
 You need to provide this script in your `composer.json` file for make this lib able to be used.
@@ -11,7 +11,9 @@ You need to provide this script in your `composer.json` file for make this lib a
 ```json
     "scripts": {
         ...
-        "laminas-gen": "vendor/bin/laminas-gen-console",
+        "laminas-gen": [
+        "LaminasGen\\Handler::handle"
+        ],
         ...
     }
 
@@ -23,6 +25,9 @@ You need to provide this script in your `composer.json` file for make this lib a
 
 ### Controller generation
 `composer laminas-gen controller <yourControllerName> <existingModuleName>` (This will generate all associated CRUD views for again, use your controller fast as possible. And you cant disable it ... For the moment 🥱)
+
+### Entity generation
+`composer laminas-gen entity <yourEntityName> <yourModuleName>`. You will have to type each properties of your entity. `yourEntityName.php` and `yourEntityNameTable.php` files will be generated, with default getters and setters.
 
 ### Undo
 `composer laminas-gen undo` (This will undo all last creations or modifications done by LaminasGen)  
@@ -44,5 +49,5 @@ If you want to use package during debug, add these lines on your test project :
         }
     ]
 ```
-Then, just install it with : `composer install thomasleconte/laminas-gen @dev`.
+Then, just install it with : `composer require thomasleconte/laminas-gen @dev`.
 Take care about `@dev`, composer uses this to pickup the source code and symlink it to your new package.

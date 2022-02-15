@@ -14,7 +14,8 @@ class {{entityName}}
 
     public function exchangeArray(array $data)
     {
-
 {{exchangeArrayProperties}}
     }
+
+{{gettersSetters}}
 }
