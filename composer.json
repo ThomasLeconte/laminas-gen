@@ -19,6 +19,9 @@
         }
     },
     "scripts": {
+        "laminas-gen": [
+            "LaminasGen\\Handler::handle"
+        ],
         "post-update-cmd": [
             "LaminasGen\\Handler::install"
         ],
