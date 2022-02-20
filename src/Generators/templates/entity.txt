@@ -1,0 +1,21 @@
+<?php
+
+namespace {{moduleName}}\Model;
+
+/**
+ *
+ * This file has been generated with LaminasGen
+ * https://github.com/ThomasLeconte/laminas-gen
+ *
+ */
+class {{entityName}}
+{
+{{properties}}
+
+    public function exchangeArray(array $data)
+    {
+{{exchangeArrayProperties}}
+    }
+
+{{gettersSetters}}
+}

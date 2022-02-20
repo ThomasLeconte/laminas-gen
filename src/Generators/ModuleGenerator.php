@@ -3,6 +3,7 @@
 namespace LaminasGen\Generators;
 
 use Exception;
+use Composer\Script\Event;
 use LaminasGen\Data\Constants;
 use LaminasGen\Generators\ControllerGenerator;
 use LaminasGen\Exceptions\UNknownArgumentException;
@@ -15,51 +16,43 @@ class ModuleGenerator extends Generator
   public static string $usage = "composer laminas-gen module <YourModuleName> [Optional: without-extra]";
   private array $args;
 
-  public function __construct(array $args)
+  public function __construct(Event $event)
   {
-    parent::__construct();
-    if (sizeof($args) >= self::$requiredArgs) {
-      $this->args = $args;
+    parent::__construct($event);
+    $this->args = $event->getArguments();
+    if (sizeof($this->args) >= self::$requiredArgs) {
       if ($this->checkIfModuleExists()) {
         throw new ModuleAlreadyExistsException($this->getModuleName());
       } else {
-        if (sizeof($args) == 3) {
-          if ($args[2] === 'without-extra') {
-            echo 'Building "' . $args[1] . '" module ...' . "\n";
+        if (sizeof($this->args) == 3) {
+          if ($this->args[2] === 'without-extra') {
+            echo 'Building "' . $this->args[1] . '" module ...' . "\n";
             $this->generate();
           } else {
             throw new UnknownArgumentException(3, self::$usage);
           }
         } else {
-          echo 'Building "' . $args[1] . '" module ...' . "\n";
+          echo 'Building "' . $this->args[1] . '" module ...' . "\n";
           $this->generate();
-          new ControllerGenerator([null, $this->getModuleName() . "Controller", $this->getModuleName()], true);
+          $this->event->setArguments([null, $this->getModuleName() . "Controller", $this->getModuleName()]);
+          new ControllerGenerator($event, true);
         }
       }
     } else {
       throw new EnoughtArgumentsException(self::$usage);
     }
-
   }
 
   public function generate()
   {
-    $this->cacheManager->addToLog(
-      Constants::LOG_COMMENT,
-      "CREATE MODULE " . $this->getModuleName()
-    );
-    mkdir('./module/'.$this->getModuleName());
-    mkdir('./module/' . $this->getModuleName() . "/config", 0777, true);
-    mkdir('./module/' . $this->getModuleName() . "/src", 0777, true);
-    mkdir('./module/' . $this->getModuleName() . "/view", 0777, true);
-    mkdir('./module/' . $this->getModuleName() . "/src/Controller", 0777, true);
-    mkdir('./module/' . $this->getModuleName() . "/src/Form", 0777, true);
-    mkdir('./module/' . $this->getModuleName() . "/src/Model", 0777, true);
+    $this->cacheManager->addToLog(Constants::LOG_COMMENT, "CREATE MODULE " . $this->getModuleName());
+    mkdir('./module/' . $this->getModuleName());
+    $directories = ["config", "src", "view", "test", "src/Controller", "src/Form", "src/Model"];
+    foreach ($directories as $directory) {
+      mkdir('./module/' . $this->getModuleName() . "/" . $directory, 0777, true);
+    }
     $this->makeConfig();
-    $this->cacheManager->addToLog(
-      Constants::LOG_COMMENT,
-      "END"
-    );
+    $this->cacheManager->addToLog(Constants::LOG_COMMENT, "END");
     echo "\n\e[0;30;42mSuccessfull generated " . $this->getModuleName() . " module with it configuration !\e[0m\n";
   }
 
@@ -74,7 +67,8 @@ class ModuleGenerator extends Generator
     $this->cacheManager->addToLog(Constants::LOG_CREATE_FOLDER, "./module/" . $this->getModuleName() . "/");
   }
 
-  public function makeComposerConfig(){
+  public function makeComposerConfig()
+  {
     $oldFileContent = file_get_contents("./composer.json");
     $composerJson = json_decode(file_get_contents('./composer.json'), true);
     $composerJson["autoload"]["psr-4"][$this->getModuleName() . "\\"] = "module/" . $this->getModuleName() . "/src" . "/";
@@ -89,7 +83,7 @@ class ModuleGenerator extends Generator
     $modulesConfigFile = file_get_contents("./config/modules.config.php");
     $oldFileContent = $modulesConfigFile;
     $modulesConfigFile = str_replace("return [", "return [
-    '".$this->getModuleName()."',", $modulesConfigFile);
+    '" . $this->getModuleName() . "',", $modulesConfigFile);
     file_put_contents("./config/modules.config.php", $modulesConfigFile);
     $this->cacheManager->addToLog(Constants::LOG_UPDATE_FILE, "./config/modules.config.php", $oldFileContent);
   }
@@ -116,24 +110,5 @@ class ModuleGenerator extends Generator
   public function getModuleName(): string
   {
     return $this->args[1];
-  }
-
-  public function cleanProjectCache()
-  {
-    $phpFiles = array_map(function ($file) {
-      $length = strlen(".php");
-      if (substr_compare($file, ".php", -$length) === 0) {
-        return $file;
-      }
-    }, scandir("./data/cache"));
-    if(sizeof($phpFiles) > 0){
-      for ($i = 0; $i < sizeof($phpFiles); $i++) {
-        if($phpFiles[$i] !== NULL){
-          if (!unlink("./data/cache/" . $phpFiles[$i])) {
-            throw new Exception("Unable to delete cache file ./data/cache/" . $phpFiles[$i]);
-          }
-        }
-      }
-    }
   }
 }

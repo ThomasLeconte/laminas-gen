@@ -62,13 +62,20 @@ class CacheManager
             $this->deleteDirectory($line[1]);
             break;
           case Constants::LOG_COMMENT:
-            if($stepByStep) $commentsCount++;
+            if($stepByStep){
+              $commentsCount++;
+              if ($line[1] != "END") {
+                $reversed = array_reverse($logFileExploded);
+                echo "\n\e[0;30;42mSuccessful cancellation of the last step '" . array_shift($reversed) . "' !\e[0m\n";
+              }
+            }
             break;
         }
         if($stepByStep && $commentsCount == 2){
           break;
         }
       }
+      if (!$stepByStep) echo "\n\e[0;30;42mSuccessful cancellation of all last steps !\e[0m\n";
     } else {
       throw new Exception("You don't have used LaminasGen for undo something...");
     }
