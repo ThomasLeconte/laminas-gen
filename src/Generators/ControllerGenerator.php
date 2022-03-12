@@ -14,10 +14,10 @@ class ControllerGenerator extends Generator
   private array $args;
   private bool $calledByModuleGenerator = false;
 
-  public function __construct(Event $event, bool $calledByModuleGenerator = null)
+  public function __construct(Event $event, bool $calledByModuleGenerator = null, array $overrideArguments = null)
   {
     parent::__construct($event);
-    $this->args = $event->getArguments();
+    $this->args = $overrideArguments != null ? $overrideArguments : $event->getArguments();
     if ($calledByModuleGenerator) {
       $this->calledByModuleGenerator = true;
     }

@@ -37,5 +37,8 @@
         "post-create-project-cmd": [
             "php -r \"copy('config/local-example.php', 'config/local.php');\""
         ]
+    },
+    "require": {
+        "composer/composer": "^2.2"
     }
 }

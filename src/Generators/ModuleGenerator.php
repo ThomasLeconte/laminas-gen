@@ -16,7 +16,13 @@ class ModuleGenerator extends Generator
   public static string $usage = "composer laminas-gen module <YourModuleName> [Optional: without-extra]";
   private array $args;
 
-  public function __construct(Event $event)
+    /**
+     * @throws \LaminasGen\Exceptions\ModuleNotFoundException
+     * @throws EnoughtArgumentsException
+     * @throws UNknownArgumentException
+     * @throws ModuleAlreadyExistsException
+     */
+    public function __construct(Event $event)
   {
     parent::__construct($event);
     $this->args = $event->getArguments();
@@ -34,8 +40,7 @@ class ModuleGenerator extends Generator
         } else {
           echo 'Building "' . $this->args[1] . '" module ...' . "\n";
           $this->generate();
-          $this->event->setArguments([null, $this->getModuleName() . "Controller", $this->getModuleName()]);
-          new ControllerGenerator($event, true);
+          new ControllerGenerator($event, true, [null, $this->getModuleName() . "Controller", $this->getModuleName()]);
         }
       }
     } else {

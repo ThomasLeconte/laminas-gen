@@ -1,4 +1,5 @@
-
-
-# CREATE ENTITY Car
-
+# CREATE MODULE Toto
+UPDATE_FILE ./composer.json C:\xampp7.4\htdocs\laminas-gen\src\Data/cache/files/cache_622cff58492a6.json
+UPDATE_FILE ./config/modules.config.php C:\xampp7.4\htdocs\laminas-gen\src\Data/cache/files/cache_622cff584b106.php
+CREATE_FOLDER ./module/Toto/
+# END
