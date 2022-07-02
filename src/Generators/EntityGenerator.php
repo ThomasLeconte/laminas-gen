@@ -30,18 +30,26 @@ class EntityGenerator extends Generator
         throw new ModuleNotFoundException($this->getModuleName());
       }
     } else {
-      throw new EnoughtArgumentsException("composer laminas-gen controller <YourControllerName> <YourModuleName>");
+      throw new EnoughtArgumentsException("composer laminas-gen entity <ModuleName> <YourEntityName>");
     }
   }
 
   public function generate(){
     $this->cacheManager->addToLog(Constants::LOG_COMMENT, "CREATE ENTITY " . $this->getEntityName());
-    $result = $this->ask("\n\e[1;37;45mType here your first property name or press ENTER for leave :\e[0m", true);
-    if($result !== null){
+
+    echo "\n\e[1;37;46m# Entity generation\n# During generation, you will be able to give a type on your properties. You can choose among all primary PHP types.\e[0m\n\n";
+
+    $propertyName = $this->ask("\n\e[1;37;45mType here your first property name or press ENTER for leave :\e[0m", true);
+    if($propertyName !== null){
+      $propertyType = $this->ask("\n\e[1;37;45mWhat is type of $propertyName property ? Press ENTER to leave question\e[0m", true);
+      $finalProp = array("type" => $propertyType, "name" => $propertyName);
       $properties = [];
-      while($result != null){
-        array_push($properties, $result);
-        $result = $this->ask("\n\e[1;37;45mType here your next property name or press ENTER for leave :\e[0m", true);
+      while($propertyName != null){
+        array_push($properties, $finalProp);
+        $propertyName = $this->ask("\n\e[1;37;45mType here your next property name or press ENTER for leave :\e[0m", true);
+        if($propertyName == null) break;
+        $propertyType = $this->ask("\n\e[1;37;45mWhat is type of $propertyName property ?\e[0m", true);
+        $finalProp = array("type" => $propertyType, "name" => $propertyName);
       }
     }
     $this->generateEntityFile($properties);
@@ -58,11 +66,15 @@ class EntityGenerator extends Generator
     $exchangeArrayProperties = "";
     $gettersSetters = "";
     foreach ($properties as $property) {
-      $propertiesResult .= "\tprivate $" . $property . ";\n";
-      $exchangeArrayProperties .= "\t\t" . '$this->' . $property . ' = !empty($data["' . $property . '"]) ? $data["' . $property . '"] : null;' . "\n";
-      $propertyNameTransformed = ucfirst(strtolower($property));
-      $gettersSetters .= "\t"."public function get".$propertyNameTransformed."(){\n\t\treturn \$this->".$property.";\n\t}\n\n";
-      $gettersSetters .= "\t"."public function set".$propertyNameTransformed."(\$value){\n\t\t\$this->".$property." = \$value;\n\t}\n\n";
+      $propertiesResult .= $property["type"] != null
+          ? "\tprivate ". $property["type"] ." $" . $property["name"] . ";\n"
+          : "\tprivate $" . $property["name"] . ";\n";
+      $exchangeArrayProperties .= "\t\t" . '$this->' . $property["name"] . ' = !empty($data["' . $property["name"] . '"]) ? $data["' . $property["name"] . '"] : null;' . "\n";
+      $propertyNameTransformed = ucfirst(strtolower($property["name"]));
+      $potentialGetterType = $property["type"] != null ? " : ".$property["type"] : "";
+      $potentialSetterType = $property["type"] != null ? $property["type"]." " : "";
+      $gettersSetters .= "\t"."public function get".$propertyNameTransformed."()$potentialGetterType {\n\t\treturn \$this->".$property["name"].";\n\t}\n\n";
+      $gettersSetters .= "\t"."public function set".$propertyNameTransformed."($potentialSetterType\$value) {\n\t\t\$this->".$property["name"]." = \$value;\n\t}\n\n";
     }
     $template = str_replace("{{properties}}", $propertiesResult, $template);
     $template = str_replace("{{exchangeArrayProperties}}", $exchangeArrayProperties, $template);
